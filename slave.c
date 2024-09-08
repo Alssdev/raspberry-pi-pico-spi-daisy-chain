@@ -1,38 +1,70 @@
-#include "hardware/gpio.h"
-#include "hardware/spi.h"
-#include "pico/binary_info/code.h"
-#include "pico/time.h"
+//=================================================================================//
+
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "hardware/gpio.h"
+#include "hardware/regs/spi.h"
+#include "hardware/spi.h"
+#include "pico/binary_info.h"
+#include "pico/stdlib.h"
 #include "slave.h"
 
-#define BUF_LEN         20
+//=================================================================================//
 
-int main() {
-  init_spi_slave();
+#define MHz           1000000
+#define LED_GPIO      15
 
-  char buf_out[BUF_LEN] = "12345";
-  char buf_in[BUF_LEN];
+//=================================================================================//
 
-  while (1) {
-    // send and read
-    spi_write_read_blocking(spi_default, buf_out, buf_in, BUF_LEN);
-  }
+void spiReceiveISR () {
+  gpio_put (LED_GPIO, 1);
+
+  // reserve memory for packet
+  struct packet *p = malloc (2);
+
+  // read packet
+  spi_read_blocking (spi_default, 0, (uint8_t *)p, 2);
+  printf ("{ seq_num: %d, data: %d }\n", p->seq_num, p->data);
+  free (p);
+
+  gpio_put (LED_GPIO, 0);
 }
 
-void init_spi_slave(void) {
-#if !defined(spi_default) || !defined(PICO_DEFAULT_SPI_SCK_PIN) || !defined(PICO_DEFAULT_SPI_TX_PIN) || !defined(PICO_DEFAULT_SPI_RX_PIN) || !defined(PICO_DEFAULT_SPI_CSN_PIN)
-  #warning spi/spi_slave example requires a board with SPI pins
-  puts("Default SPI pins were not defined");
-#else
-  // Enable SPI 0 at 1 MHz and connect to GPIOs
-  spi_init(spi_default, 1000 * 1000);
-  spi_set_slave(spi_default, true);
-  gpio_set_function(PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
-  gpio_set_function(PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI);
-  // Make the SPI pins available to picotool
-  bi_decl(bi_4pins_with_func(PICO_DEFAULT_SPI_RX_PIN, PICO_DEFAULT_SPI_TX_PIN, PICO_DEFAULT_SPI_SCK_PIN, PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI));
-#endif
+//=================================================================================//
+
+int main (void) {
+  // Enable UART
+  stdio_init_all ();
+  sleep_ms (2 * 1000);
+  printf ("CC8 project - slave mode\n");
+
+  // enable SPI0 at 1MHz
+  spi_init (spi_default, 1 * MHz);
+  spi_set_slave (spi_default, true);
+
+  // enable LED
+  gpio_init (LED_GPIO);
+  gpio_set_dir (LED_GPIO, GPIO_OUT);
+
+  // assign SPI functions to default SPI pint.
+  // for more info read RP2040 Datasheet(2.19.2. Function Select).
+  gpio_set_function (PICO_DEFAULT_SPI_RX_PIN, GPIO_FUNC_SPI);
+  gpio_set_function (PICO_DEFAULT_SPI_SCK_PIN, GPIO_FUNC_SPI);
+  gpio_set_function (PICO_DEFAULT_SPI_TX_PIN, GPIO_FUNC_SPI);
+  gpio_set_function (PICO_DEFAULT_SPI_CSN_PIN, GPIO_FUNC_SPI);
+
+  // Enable the RX FIFO interrupt (RXIM)
+  spi0_hw->imsc = 1 << 2;
+
+  // Enable the SPI interrupt
+  irq_set_enabled (SPI0_IRQ, 1);
+
+  // Attach the interrupt handler
+  irq_set_exclusive_handler (SPI0_IRQ, spiReceiveISR);
+
+  while (1) {
+    tight_loop_contents();
+  }
 }
 

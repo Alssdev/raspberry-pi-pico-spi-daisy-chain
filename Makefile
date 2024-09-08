@@ -7,7 +7,7 @@ PICO_BOARD=pico_w
 
 # Create build directory and run CMake
 all: $(BUILD_DIR)
-	cd $(BUILD_DIR) && cmake .. && make -j4
+	cd $(BUILD_DIR) && cmake -DPICO_BOARD=pico_w .. && make -j4
 
 # Create build directory if it doesn't exist
 $(BUILD_DIR):
