@@ -13,22 +13,25 @@
 //=================================================================================//
 
 #define MHz           1000000
+#define kHz           1000
 #define LED_GPIO      15
+#define PACKET_SIZE   sizeof (struct packet)
+#define CHUNK_SIZE    1
 
+uint8_t in_buf[2];
+uint8_t off = 0;
 //=================================================================================//
 
 void spiReceiveISR () {
-  gpio_put (LED_GPIO, 1);
-
-  // reserve memory for packet
-  struct packet *p = malloc (2);
+  // gpio_put (LED_GPIO, 1);
 
   // read packet
-  spi_read_blocking (spi_default, 0, (uint8_t *)p, 2);
-  printf ("{ seq_num: %d, data: %d }\n", p->seq_num, p->data);
-  free (p);
-
-  gpio_put (LED_GPIO, 0);
+  spi_read_blocking (spi_default, 0, in_buf + off++, CHUNK_SIZE);
+  if (off > 1) {
+    printf("%c", (char) in_buf[1]);
+    off = 0;
+  }
+  // gpio_put (LED_GPIO, 0);
 }
 
 //=================================================================================//
@@ -40,7 +43,7 @@ int main (void) {
   printf ("CC8 project - slave mode\n");
 
   // enable SPI0 at 1MHz
-  spi_init (spi_default, 1 * MHz);
+  spi_init (spi_default, 1 * kHz);
   spi_set_slave (spi_default, true);
 
   // enable LED
