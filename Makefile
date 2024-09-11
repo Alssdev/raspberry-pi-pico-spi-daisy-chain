@@ -19,7 +19,7 @@ clean:
 
 # Flash the project to the Pico using picotool
 flash: all
-	picotool load $(BUILD_DIR)/slave.uf2
+	picotool load $(BUILD_DIR)/router.uf2
 
 .PHONY: all clean flash
 
