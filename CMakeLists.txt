@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 add_executable(slave
   slave.c
+  lib/list.c
+  lib/debug.c
 )
 
 target_include_directories(slave PRIVATE
@@ -25,6 +27,6 @@ target_link_libraries(slave
   # Uncomment when using Pico W
   pico_cyw43_arch_none
   hardware_spi
+  pico_sync
 )
 
-target_link_libraries(pico_stdlib)
