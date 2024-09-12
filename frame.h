@@ -7,7 +7,7 @@
 #define CHUNK_SIZE    1
 
 /* frame definitions */
-enum frame_type { message };
+enum frame_type { message, ACK };
 struct frame {
   uint8_t id;                 // id of the sent frame.
   enum frame_type type;

@@ -1,4 +1,5 @@
 #include "router.h"
+#include "frame.h"
 #include "lib/list.h"
 #include "master.h"
 #include "pico/sem.h"
@@ -46,7 +47,7 @@ int main (void) {
 
     // send frame to next router
     if (elem != NULL) {
-      elem->f->from++;
+      // elem->f->from++;
       master_propagate (elem->f);
 
       // free resources

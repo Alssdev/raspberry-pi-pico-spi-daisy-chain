@@ -46,7 +46,7 @@ void spiReceiveISR () {
 //=================================================================================//
 
 void slave_init (void) {
-  // enable SPI0 at 1MHz
+  // enable SPI0 at 10kHz
   spi_init (spi0, BAUDRATE);
   spi_set_slave (spi0, true);
 
