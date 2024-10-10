@@ -1,12 +1,12 @@
-#ifndef __SLAVE_H__
-#define __SLAVE_H__
+#ifndef SLAVE_H
+#define SLAVE_H
 
 #include <stdint.h>
 #include "lib/list.h"
 #include "pico/sem.h"
 
 /* receive list */
-extern semaphore_t receive_sema;     // syncronization
+extern semaphore_t receive_sema;     // synchronization
 extern struct list receive_list;
 
 struct receive_elem {
@@ -17,4 +17,3 @@ struct receive_elem {
 void slave_init (void);
 
 #endif // !SLAVE_H
-

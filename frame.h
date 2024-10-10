@@ -1,9 +1,9 @@
-#ifndef __FRAME_H__
-#define __FRAME_H__
+#ifndef FRAME_H
+#define FRAME_H
 
 #include <stdint.h>
 
-#define BAUDRATE      10 * 1000
+#define BAUDRATE      (10 * 1000)
 #define CHUNK_SIZE    1
 
 /* frame definitions */
@@ -17,4 +17,3 @@ struct frame {
 };
 
 #endif // !FRAME_H
-

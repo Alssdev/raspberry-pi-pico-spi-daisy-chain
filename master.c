@@ -2,9 +2,6 @@
 #include "frame.h"
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
-#include "pico/stdio.h"
-#include "pico/time.h"
-#include <stdio.h>
 
 void master_init () {
   // enable SPI0 at 1kHz
@@ -19,7 +16,7 @@ void master_init () {
 }
 
 void master_propagate (struct frame *f) {
-  for (uint8_t i = 0; i < sizeof *f; i ++) {
+  for (unsigned int i = 0; i < sizeof *f; i ++) {
     spi_write_blocking (spi1, ((uint8_t *)f + i), CHUNK_SIZE);
   }
 }

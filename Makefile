@@ -1,13 +1,12 @@
 # Set build directory
 BUILD_DIR = build
 
-# Set Pico SDK path
-PICO_SDK_PATH = /Users/alssdev/pico/pico-sdk
-PICO_BOARD=pico_w
+# Set Pico board
+PICO_BOARD=pico
 
 # Create build directory and run CMake
 all: $(BUILD_DIR)
-	cd $(BUILD_DIR) && cmake -DPICO_BOARD=pico_w .. && make -j4
+	cd $(BUILD_DIR) && cmake -DPICO_BOARD=$(PICO_BOARD) .. && make -j4
 
 # Create build directory if it doesn't exist
 $(BUILD_DIR):
@@ -19,7 +18,6 @@ clean:
 
 # Flash the project to the Pico using picotool
 flash: all
-	picotool load $(BUILD_DIR)/router.uf2
+	picotool load $(BUILD_DIR)/main.uf2
 
 .PHONY: all clean flash
-

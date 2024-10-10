@@ -9,12 +9,10 @@
 #include "hardware/spi.h"
 #include "lib/list.h"
 #include "pico/sem.h"
-#include "pico/stdlib.h"
-#include "pico/sem.h"
 
 //=================================================================================//
 
-semaphore_t receive_sema;     // syncronization
+semaphore_t receive_sema;     // synchronization
 struct list receive_list;
 
 //=================================================================================//
@@ -23,14 +21,12 @@ void spiReceiveISR () {
   // create a new frame
   struct frame *f = malloc (sizeof *f);
 
-  // only one byte is read at a time
-  uint8_t in_buf[1];
-
   // read byte using SPI
   spi_read_blocking (spi0, 0, (uint8_t *)f, sizeof *f);
 
   if (sem_try_acquire (&receive_sema)) {
-    // add it to receive_list;
+    // add it to receive_list. This IS NOT a memory leak.
+    // In the future, other method will free the memory
     struct receive_elem *elem = malloc (sizeof *elem);
     elem->f = f;
     list_push_back (&receive_list, &elem->elem);
@@ -40,7 +36,6 @@ void spiReceiveISR () {
   } else {
     // TODO
   }
-  // }
 }
 
 //=================================================================================//
@@ -70,4 +65,3 @@ void slave_init (void) {
   sem_init (&receive_sema, 1, 1);
   list_init (&receive_list);
 }
-
