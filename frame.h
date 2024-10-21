@@ -5,15 +5,15 @@
 
 #define BAUDRATE      10 * 1000
 #define CHUNK_SIZE    1
+#define MSS           99
 
 /* frame definitions */
-enum frame_type { message, ACK };
 struct frame {
-  uint8_t id;                 // id of the sent frame.
-  enum frame_type type;
   uint8_t to;                 // assigned in class
   uint8_t from;               // assigned in class
-  char data[99];              // actual data
+  uint8_t length;             // data's length
+  uint8_t header_checksum;    // to + from + length
+  uint8_t *data;              // actual data
 };
 
 #endif // !FRAME_H

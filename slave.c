@@ -20,14 +20,36 @@ struct list receive_list;
 //=================================================================================//
 
 void spiReceiveISR () {
-  // create a new frame
-  struct frame *f = malloc (sizeof *f);
+  // buffers 
+  uint8_t header[4];
+  uint8_t *data;
 
-  // only one byte is read at a time
-  uint8_t in_buf[1];
+  // read first 4 Bytes (frame header: to, from, length, checksum)
+  spi_read_blocking (spi0, 0, header, 4);
 
-  // read byte using SPI
-  spi_read_blocking (spi0, 0, (uint8_t *)f, sizeof *f);
+  // validate checksum
+  uint8_t valid = header[0] + header[1] + header[2] + header[3]; // to + from + length + checksum
+  while (valid != 0) {
+    header[0] = header[1];
+    header[1] = header[2];
+    header[2] = header[3];
+
+    spi_read_blocking (spi0, 0, &header[3], 1);
+    
+    // try agin
+    valid = header[0] + header[1] + header[2] + header[3]; // to + from + length + checksum
+  }
+
+  // create frame 
+  struct frame *f = malloc(sizeof *f);
+  f->to = header[0];
+  f->from = header[1];
+  f->length = header[2];
+  f->header_checksum = header[3];
+
+  // read data
+  f->data = malloc(header[3]);   // header[3] -> length
+  spi_read_blocking (spi0, 0, f->data, header[3]);
 
   if (sem_try_acquire (&receive_sema)) {
     // add it to receive_list;
@@ -40,8 +62,31 @@ void spiReceiveISR () {
   } else {
     // TODO
   }
-  // }
 }
+
+// void spiReceiveISR () {
+//   // create a new frame
+//   struct frame *f = malloc (sizeof *f);
+//
+//   // only one byte is read at a time
+//   uint8_t in_buf[1];
+//
+//   // read byte using SPI
+//   spi_read_blocking (spi0, 0, (uint8_t *)f, sizeof *f);
+//
+//   if (sem_try_acquire (&receive_sema)) {
+//     // add it to receive_list;
+//     struct receive_elem *elem = malloc (sizeof *elem);
+//     elem->f = f;
+//     list_push_back (&receive_list, &elem->elem);
+//     printf ("{ from: %d, data: %s }\n", f->from, f->data);
+//     sem_release (&receive_sema);
+//
+//   } else {
+//     // TODO
+//   }
+//   // }
+// }
 
 //=================================================================================//
 
