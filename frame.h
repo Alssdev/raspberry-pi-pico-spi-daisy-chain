@@ -4,8 +4,6 @@
 #include <stdint.h>
 
 #define BAUDRATE      10 * 1000
-#define CHUNK_SIZE    1
-#define MSS           99
 
 /* frame definitions */
 struct frame {

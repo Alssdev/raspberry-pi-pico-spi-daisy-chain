@@ -30,6 +30,7 @@ void spiReceiveISR () {
   // validate checksum
   uint8_t valid = header[0] + header[1] + header[2] + header[3]; // to + from + length + checksum
   while (valid != 0) {
+    printf("checksum error\n");
     header[0] = header[1];
     header[1] = header[2];
     header[2] = header[3];
@@ -48,45 +49,19 @@ void spiReceiveISR () {
   f->header_checksum = header[3];
 
   // read data
-  f->data = malloc(header[3]);   // header[3] -> length
-  spi_read_blocking (spi0, 0, f->data, header[3]);
+  f->data = malloc(f->length);
+  spi_read_blocking (spi0, 0, f->data, f->length);
 
   if (sem_try_acquire (&receive_sema)) {
     // add it to receive_list;
     struct receive_elem *elem = malloc (sizeof *elem);
     elem->f = f;
     list_push_back (&receive_list, &elem->elem);
-    printf ("{ from: %d, data: %s }\n", f->from, f->data);
     sem_release (&receive_sema);
-
   } else {
     // TODO
   }
 }
-
-// void spiReceiveISR () {
-//   // create a new frame
-//   struct frame *f = malloc (sizeof *f);
-//
-//   // only one byte is read at a time
-//   uint8_t in_buf[1];
-//
-//   // read byte using SPI
-//   spi_read_blocking (spi0, 0, (uint8_t *)f, sizeof *f);
-//
-//   if (sem_try_acquire (&receive_sema)) {
-//     // add it to receive_list;
-//     struct receive_elem *elem = malloc (sizeof *elem);
-//     elem->f = f;
-//     list_push_back (&receive_list, &elem->elem);
-//     printf ("{ from: %d, data: %s }\n", f->from, f->data);
-//     sem_release (&receive_sema);
-//
-//   } else {
-//     // TODO
-//   }
-//   // }
-// }
 
 //=================================================================================//
 

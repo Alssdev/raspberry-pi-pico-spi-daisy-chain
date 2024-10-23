@@ -13,19 +13,27 @@ int main (void) {
   // Enable UART
   stdio_init_all ();
 
+  sleep_ms(1000);
+
   slave_init ();
   master_init ();
 
   // example of data from Drvier Layer
   // ============================================================
-  char *data = "I'm Poseidon!";
+  char *data = "Probando probando 123";
   struct frame *f = malloc (sizeof *f);
-  f->to = 0x5;
-  f->from = 0x1;
-  f->type = message;
-  for (int8_t i = 0; i < 14; i++) {
+  f->to = 0x4;
+  f->from = 0x2;
+  f->length = 21 + 1;   // + 1 because of \0 at the end of a string
+  f->header_checksum = ((f->to + f->from + f->length) ^ 0xFF) + 0x1;    // checksum is ALWAYS calculated the same
+
+  // reserve memory and read
+  f->data = malloc (f->length);
+  for (int8_t i = 0; i < f->length; i++) {
     f->data[i] = data[i];
   }
+
+  // add to list
   struct receive_elem *elem = malloc(sizeof *elem);
   elem->f = f;
 
@@ -48,14 +56,17 @@ int main (void) {
     // send frame to next router
     if (elem != NULL) {
       // elem->f->from++;
-      master_propagate (elem->f);
+      struct frame *f = elem->f;
+      printf ("(%d, %d, %d, %d, %s)\n", f->to, f->from, f->length, f->header_checksum, f->data);
+      master_propagate (f);
 
       // free resources
+      free (elem->f->data);
       free (elem->f);
       free (elem);
     }
 
     // this is optional.
-    sleep_us (500);
+    sleep_ms (10);
   }
 }
